@@ -1,0 +1,11 @@
+Model Information:
+* title:	DP #2 HW 5_2 [Kinkaku-ji]
+* source:	https://sketchfab.com/3d-models/dp-2-hw-5-2-kinkaku-ji-a21f0f9e29524e299c49fd666c5112ea
+* author:	dima_motor (https://sketchfab.com/dima_motor)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "DP #2 HW 5_2 [Kinkaku-ji]" (https://sketchfab.com/3d-models/dp-2-hw-5-2-kinkaku-ji-a21f0f9e29524e299c49fd666c5112ea) by dima_motor (https://sketchfab.com/dima_motor) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

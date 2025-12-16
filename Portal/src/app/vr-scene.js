@@ -24,7 +24,10 @@ envMap.mapping = THREE.EquirectangularReflectionMapping;
 scene.environment = envMap;
 scene.background = envMap;
 
-
+const skytexture = await new THREE.TextureLoader().loadAsync(".../public/Skyboxes/mossyforest.png");
+texture.colorSpace = THREE.SRGBColorSpace;
+texture.mapping = THREE.EquirectangularReflectionMapping;
+scene.background = skytexture;
 
 function animate(t = 0) {
   requestAnimationFrame(animate);

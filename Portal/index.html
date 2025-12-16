@@ -2,14 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>portal</title>
+    <title>AR Portal (Three.js)</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; }
+      #xr-canvas { width: 100vw; height: 100vh; display: block; }
+      #ui {
+        position: fixed; top: 12px; left: 12px; z-index: 10;
+        display: flex; gap: 8px;
+      }
+      button { padding: 10px 12px; font-size: 14px; }
+      #hint {
+        position: fixed; bottom: 12px; left: 12px; z-index: 10;
+        background: rgba(0,0,0,.5); color: white; padding: 8px 10px;
+        font-family: system-ui, sans-serif; font-size: 13px; border-radius: 8px;
+        max-width: 70ch;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <canvas id="xr-canvas" style="width: 100vw; height: 100vh;"></canvas>
-    <script type="module" src="/src/app/test.js"></script>
+    <div id="ui">
+      <button id="start-ar">START AR</button>
+      <button id="reset-portal" disabled>RESET PORTAL</button>
+    </div>
+    <div id="hint">Tip: START AR → auf den Boden zielen → tippen, um das Portal zu platzieren.</div>
+    <canvas id="xr-canvas"></canvas>
 
+    <script type="module" src="/src/app/kinkakuji.js"></script>
   </body>
 </html>
+
