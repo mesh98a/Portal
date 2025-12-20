@@ -2,6 +2,7 @@ import * as THREE from "three";
 import * as dat from "dat.gui";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { createARButton, createVRButton } from './xr-buttons.js';
+import { addHole, addMagicPortal } from './scene-content.js';
 
 const canvas = document.getElementById("xr-canvas");
 
@@ -33,7 +34,7 @@ arGroup.scale.set(2,2,2);
 
 //CREATE XRBUTTONS
 createARButton(renderer);
-createVRButton(renderer);
+//createVRButton(renderer);
 
 //CREATE LIGHT
 vrGroup.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.0));
@@ -226,8 +227,6 @@ gltfLoader.load(
             console.log('An error happened');
         }
     );
-
-
 
 //OBJEKTE LADEN AR
 const position = new THREE.Vector3(0, 1, 0);
