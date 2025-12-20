@@ -1,11 +1,20 @@
 import * as THREE from "three";
 import * as dat from "dat.gui";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { createARButton, createVRButton } from './xr-buttons.js';
 
 const canvas = document.getElementById("xr-canvas");
 
 //RENDERER
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ 
+    canvas, 
+    antialias: true, 
+    alpha: true, 
+    stencil: true, 
+});
+
+renderer.xr.enabled = true;
+renderer.autoClear = false;
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -15,11 +24,22 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 200);
 camera.position.set(0, 1.2, 3);
 
+const arGroup = new THREE.Group();
+const vrGroup = new THREE.Group();
+scene.add(arGroup);
+scene.add(vrGroup);
+
+arGroup.scale.set(2,2,2);
+
+//CREATE XRBUTTONS
+createARButton(renderer);
+createVRButton(renderer);
+
 //CREATE LIGHT
-scene.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.0));
+vrGroup.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.0));
 const dir = new THREE.DirectionalLight(0xffffff, 0.8);
 dir.position.set(2, 3, 1);
-scene.add(dir);
+vrGroup.add(dir);
 
 //CREATE PLANE
 const planeWidth = 500;
@@ -43,14 +63,37 @@ const planeMat = new THREE.MeshStandardMaterial({ map: tex });
 const plane = new THREE.Mesh(planeGeometry, planeMat);
 plane.rotation.x = - Math.PI / 2;
 plane.receiveShadow = true;
-//add to scene
-scene.add(plane);
+
+//add to vrGroup
+vrGroup.add(plane);
+applyPortalStencil(plane);
 
 //Skybox
 const skytexture = await new THREE.TextureLoader().loadAsync("/Skyboxes/forest_slope_4k.png");
 skytexture.colorSpace = THREE.SRGBColorSpace;
 skytexture.mapping = THREE.EquirectangularReflectionMapping;
 scene.background = skytexture;
+scene.environment = skytexture;
+
+renderer.xr.addEventListener("sessionstart", () => {
+  const s = renderer.xr.getSession();
+  const isAR = s?.mode === "immersive-ar";
+
+  if (isAR) {
+    scene.background = null;        // Skybox aus in AR
+    // optional: Environment in AR auch aus, je nach Look
+    // scene.environment = null;
+  } else {
+    scene.background = skytexture;  // an in VR
+    scene.environment = skytexture;
+  }
+});
+
+renderer.xr.addEventListener("sessionend", () => {
+  // zurück auf Desktop/Default
+  scene.background = skytexture;
+  scene.environment = skytexture;
+});
 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -122,35 +165,34 @@ function handleKeyboardInput(delta) {
 }
 
 const clock = new THREE.Clock();
-function animate() {
-  requestAnimationFrame(animate);
+
+renderer.setAnimationLoop(() => {
   const delta = clock.getDelta();
-  handleKeyboardInput(delta);
+
+  if (!renderer.xr.isPresenting) {
+    handleKeyboardInput(delta);
+  }
+
+  const s = renderer.xr.getSession();
+  const isAR = s?.mode === "immersive-ar";
+
+  renderer.clear(!isAR, true, true); // AR: color nicht clearen
   renderer.render(scene, camera);
-}
-animate();
+});
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-//OBJEKTE LADEN
+//OBJEKTE LADEN VR
 //Geometry Testobject
-const cube = new THREE.Mesh(
+/* const cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
   new THREE.MeshStandardMaterial()
 );
 cube.position.set(0, 0.5, 0);
-scene.add(cube);
+vrGroup.add(cube); */
 
 //gltf-loader für .gltf-dateien
 const gltfLoader = new GLTFLoader();
@@ -172,7 +214,9 @@ gltfLoader.load(
             }
             });
 
-            scene.add(tempel);
+            vrGroup.add(tempel);
+            tempel.traverse(applyPortalStencil);
+            tempel.traverse(o => { if (o.isMesh) o.renderOrder = 2; });
         },
         function (xhr) {
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
@@ -182,3 +226,62 @@ gltfLoader.load(
             console.log('An error happened');
         }
     );
+
+
+
+//OBJEKTE LADEN AR
+const position = new THREE.Vector3(0, 1, 0);
+//Rahmen 
+const frame = new THREE.Mesh(
+  new THREE.TorusGeometry(1.5, 0.05, 16, 64),
+  new THREE.MeshStandardMaterial()
+);
+//frame.position.copy(position);
+arGroup.add(frame);
+
+//Portal-Maske
+const portalMask = new THREE.Mesh(
+  new THREE.CircleGeometry(1.45, 64),
+  new THREE.MeshBasicMaterial({ colorWrite: false })
+);
+
+portalMask.material.stencilWrite = true;
+portalMask.material.stencilRef = 1;
+portalMask.material.stencilFunc = THREE.AlwaysStencilFunc;
+portalMask.material.stencilZPass = THREE.ReplaceStencilOp;
+portalMask.material.stencilZFail = THREE.ReplaceStencilOp;
+portalMask.material.stencilFail  = THREE.ReplaceStencilOp;
+portalMask.material.depthTest = false;
+portalMask.material.depthWrite = false;
+portalMask.material.side = THREE.DoubleSide; // optional, aber sinnvoll
+portalMask.renderOrder = 1000; 
+
+frame.renderOrder = 0;
+portalMask.renderOrder = 1;
+//portalMask.position.copy(position);
+arGroup.add(portalMask);
+
+vrGroup.traverse(applyPortalStencil);
+vrGroup.traverse(o => { if (o.isMesh) o.renderOrder = 2000; });
+
+vrGroup.position.copy(arGroup.position);
+vrGroup.quaternion.copy(arGroup.quaternion);
+vrGroup.translateZ(-5);
+
+
+
+function applyPortalStencil(obj) {
+  if (!obj.isMesh) return;
+
+  const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+  for (const m of mats) {
+    m.stencilWrite = true;
+    m.stencilRef = 1;
+    m.stencilFunc = THREE.EqualStencilFunc;
+    m.stencilFail = THREE.KeepStencilOp;
+    m.stencilZFail = THREE.KeepStencilOp;
+    m.stencilZPass = THREE.KeepStencilOp;
+    m.needsUpdate = true;
+  }
+}
+
