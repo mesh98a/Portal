@@ -1,8 +1,7 @@
-import { defineConfig } from "vite";
-
-console.log("Vite config loaded!");
+import { defineConfig } from 'vite'
 
 export default defineConfig({
+  base: "/Portal/",
   server: {
     host: true,
     allowedHosts: [
