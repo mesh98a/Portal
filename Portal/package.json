@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^7.2.4"
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "vite": "^7.3.0"
   },
   "dependencies": {
+    "dat.gui": "^0.7.9",
+    "stats.js": "^0.17.0",
     "three": "^0.181.2"
   }
 }
