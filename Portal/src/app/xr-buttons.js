@@ -2,14 +2,44 @@ import { ARButton } from 'three/addons/webxr/ARButton.js';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 
 export function createARButton(renderer) {
-    // Return Button Element
-    const button = ARButton.createButton(renderer, { requiredFeatures: ['hand-tracking','hit-test'] });
+    const button = ARButton.createButton(renderer, {
+        requiredFeatures: ["local"],
+        optionalFeatures: ["hit-test", "dom-overlay", "light-estimation"]
+    });
+    //button.style.position = 'relative';
+    button.style.cssText = `
+    position: absolute;
+    bottom: 100px;
+    padding: 12px 24px;
+    background: #00ff00;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 1000;
+  `;
+
     document.body.appendChild(button);
     return button;
 }
 
 export function createVRButton(renderer) {
     const button = VRButton.createButton(renderer);
+    button.style.cssText = `
+    position: absolute;
+    bottom: 20px;
+    padding: 12px 24px;
+    background: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 1000;
+  `;
+
+
     document.body.appendChild(button);
     return button;
 }

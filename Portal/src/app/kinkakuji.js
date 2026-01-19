@@ -32,8 +32,9 @@ scene.add(vrGroup);
 arGroup.scale.set(2,2,2);
 
 //CREATE XRBUTTONS
-createARButton(renderer);
-createVRButton(renderer);
+//const arbtn = createARButton(renderer);
+const vrbtn = createVRButton(renderer);
+
 
 //CREATE LIGHT
 vrGroup.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.0));

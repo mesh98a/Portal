@@ -1,38 +1,67 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
-import { UltraHDRLoader } from 'three/examples/jsm/loaders/UltraHDRLoader.js';
-
-const canvas = document.getElementById('xr-canvas');
-const renderer = new THREE.WebGLRenderer({antialias: true, canvas: canvas});
-renderer.setSize(window.innerWidth, window.innerHeight);
-
-const scene = new THREE.Scene();
-
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 
-const orbit = new OrbitControls(camera, renderer.domElement);
-camera.position.set(0, 0, -1000);
+export async function initVRGroup() {
 
-renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    const vrGroup = new THREE.Group();
+    //vrGroup.visible = false;
+    //scene.add(vrGroup);
 
-const loader = new HDRLoader();
-const envMap = await loader.loadAsync( 'kin.hdr' );
-envMap.mapping = THREE.EquirectangularReflectionMapping;
-scene.environment = envMap;
-scene.background = envMap;
+    /* ---------- LIGHT ---------- */
+    vrGroup.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.0));
 
-const skytexture = await new THREE.TextureLoader().loadAsync(".../public/Skyboxes/mossyforest.png");
-texture.colorSpace = THREE.SRGBColorSpace;
-texture.mapping = THREE.EquirectangularReflectionMapping;
-scene.background = skytexture;
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(2, 3, 1);
+    dir.castShadow = true;
+    vrGroup.add(dir);
 
-function animate(t = 0) {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-  orbit.update();
+    /* ---------- GROUND PLANE ---------- */
+    const planeGeometry = new THREE.PlaneGeometry(500, 500);
+
+    const texLoader = new THREE.TextureLoader();
+    const groundTex = await texLoader.loadAsync(
+        "/textures/rocky_terrain_02_diff_4k.jpg"
+    );
+
+    groundTex.colorSpace = THREE.SRGBColorSpace;
+    groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
+    groundTex.repeat.set(16, 16);
+
+    const planeMat = new THREE.MeshStandardMaterial({ map: groundTex });
+    const plane = new THREE.Mesh(planeGeometry, planeMat);
+    plane.rotation.x = -Math.PI / 2;
+    plane.receiveShadow = true;
+
+    vrGroup.add(plane);
+    //applyPortalStencil(plane);
+
+    /* ---------- GLTF MODEL ---------- */
+    const gltfLoader = new GLTFLoader();
+
+    gltfLoader.load(
+        '/Assets/Kinkakuji/scene.gltf',
+        (gltf) => {
+            const tempel = gltf.scene;
+
+            tempel.position.set(-10, 0, -30);
+            tempel.scale.set(1, 1, 1);
+            vrGroup.add(tempel);
+            /*     tempel.traverse(obj => {
+                    if (obj.isMesh) {
+                    obj.castShadow = true;
+                    obj.receiveShadow = true;
+                    obj.renderOrder = 2;
+                    }
+                });
+        
+                vrGroup.add(tempel);
+                tempel.traverse(applyPortalStencil); */
+        },
+        undefined,
+        (error) => console.error(error)
+    );
+
+    return vrGroup;
 }
 
-animate();
