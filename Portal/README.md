@@ -1,6 +1,6 @@
 #  Installationsbefehl
 ```bash
-nnpm install three-mesh-ui 
+npm install three-mesh-ui 
 ```
 
 
@@ -9,3 +9,4 @@ nnpm install three-mesh-ui
 ```bash
 npm run dev
 ```
+
