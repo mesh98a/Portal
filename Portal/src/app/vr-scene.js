@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-
 export async function initVRGroup() {
 
     const vrGroup = new THREE.Group();
@@ -39,29 +38,31 @@ export async function initVRGroup() {
     /* ---------- GLTF MODEL ---------- */
     const gltfLoader = new GLTFLoader();
 
-    gltfLoader.load(
-        '/Assets/Kinkakuji/scene.gltf',
-        (gltf) => {
-            const tempel = gltf.scene;
+    const gltf = await gltfLoader.loadAsync('/Assets/Kinkakuji/scene.gltf');
+    const tempel = gltf.scene;
+    tempel.position.set(-10, 0, -30);
+    vrGroup.add(tempel);
 
-            tempel.position.set(-10, 0, -30);
-            tempel.scale.set(1, 1, 1);
-            vrGroup.add(tempel);
-            /*     tempel.traverse(obj => {
-                    if (obj.isMesh) {
-                    obj.castShadow = true;
-                    obj.receiveShadow = true;
-                    obj.renderOrder = 2;
-                    }
-                });
-        
-                vrGroup.add(tempel);
-                tempel.traverse(applyPortalStencil); */
-        },
-        undefined,
-        (error) => console.error(error)
-    );
+    //um später tempel objekt wieder abrufen zu können
+    vrGroup.userData.temple = tempel;
 
+
+    /* ---------- AUDIO LADEN ---------- */
+    // Quellen: https://pixabay.com/de/sound-effects/natur-mountain-forest-high-quality-sound-176826/
+
+    const audioLoader = new THREE.AudioLoader();
+    const surroundingsBuffer  = await audioLoader.loadAsync("/audio/mountain-forest-high-quality-sound.mp3");
+    const narratorBuffer1 = await audioLoader.loadAsync("/audio/Erzähler_Einleitung_Wilhelm - Mature Narrator.mp3");
+
+    vrGroup.userData.audioBuffers = {
+        surroundings: surroundingsBuffer,
+        narrator1: narratorBuffer1,
+    };
     return vrGroup;
+}
+
+async function loadAudioBuffer(url) {
+  const loader = new THREE.AudioLoader();
+  return await loader.loadAsync(url);
 }
 

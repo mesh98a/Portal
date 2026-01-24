@@ -11,6 +11,7 @@ import ThreeMeshUI from 'three-mesh-ui'
 import { ARPortalController } from "./app/ar-scene.js";
 import { VRMovementController } from "./app/vr-movement.js";
 import { PortalTransitionManager } from "./app/portalTransition.js";
+import { StoryManager } from "./app/StoryManager.js";
 
 
 const CONFIG = {
@@ -29,6 +30,8 @@ const CONFIG = {
 class PortalSystem {
   constructor() {
     const { width, height, position, radius, zoom, resolution } = CONFIG.portal;
+    const res = Math.max(1, CONFIG.portal.resolution || 256);
+
     // Renderer + Szenen
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -56,7 +59,7 @@ class PortalSystem {
     this.portalCamera = new THREE.PerspectiveCamera(70, 1, 0.1, 500);
 
     // RenderTarget
-    this.portalRT = new THREE.WebGLRenderTarget(512, 512, {
+    this.portalRT = new THREE.WebGLRenderTarget(res, res, {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
@@ -64,7 +67,7 @@ class PortalSystem {
       stencilBuffer: false,
     });
 
-    this.portalRT2 = new THREE.WebGLRenderTarget(512, 512, {
+    this.portalRT2 = new THREE.WebGLRenderTarget(res, res, {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
@@ -98,6 +101,14 @@ class PortalSystem {
     this.setupControls();
     this.setupPortalDetection();
     //this.setupReticle();
+    this.story = new StoryManager({
+      ui: this.ui,
+      vrGroup: this.vrGroup,
+      vrScene: this.vrScene,
+      player: this.player,
+      mainCamera: this.mainCamera,
+      listener: this.listener,
+    });
     this.start();
   }
 
@@ -143,6 +154,7 @@ class PortalSystem {
     this.vrScene.background = skytexture;
 
     const vrGroup = await initVRGroup();
+    this.vrGroup = vrGroup;
     vrGroup.position.set(0, 0, 0);
     this.vrScene.add(vrGroup);
 
@@ -188,10 +200,18 @@ class PortalSystem {
 
   start() {
     let t = 0;
+    const clock = new THREE.Clock();
 
     this.renderer.setAnimationLoop((time, frame) => {
       if (!frame) return;
       t += 0.01;
+      const dt = clock.getDelta();
+
+      const gl = this.renderer.getContext();
+      if (gl.drawingBufferWidth === 0 || gl.drawingBufferHeight === 0) {
+        return; // XR/canvas ist gerade 0x0 -> Frame skip
+      }
+
 
       // ✅ KEYBOARD BEWEGUNG
       this.player.position.x += this.velocity.x;
@@ -224,6 +244,18 @@ class PortalSystem {
 
       }
 
+      if (this._lastScene !== this.currentScene) {
+        this.isInVRWorld = (this.currentScene === this.vrScene);
+
+        if (this.isInVRWorld) this.story.start("vr_intro");
+        else this.story.stop();
+
+        this._lastScene = this.currentScene;
+      }
+
+      // 3) Danach Story pro Frame fortschreiben
+      this.story.update(dt);
+      
       this.renderer.xr.enabled = false;
       const oldTarget = this.renderer.getRenderTarget();
 
@@ -271,14 +303,18 @@ class PortalSystem {
     this.player = new THREE.Group();
     this.player.add(this.mainCamera);
 
+    this.listener = new THREE.AudioListener();
+    this.mainCamera.add(this.listener);
+
+
     // Starte in der Portal-Szene (vor dem Portal)
     this.portalScene.add(this.player);
     this.currentScene = this.portalScene;
     this.currentScene.add(this.player)
     this.lastPlayerZ = this.player.position.z;
   }
-  setupControls() {
 
+  setupControls() {
     this.vrMove = new VRMovementController({
       renderer: this.renderer,
       camera: this.mainCamera,
