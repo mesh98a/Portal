@@ -176,7 +176,8 @@ class PortalSystem {
     };
     console.log("✅ Portal 2 in VR-Szene erstellt bei:", this.portal2.mesh.position);
 
-    // Partikelsystem erstellen
+    // Partikelsystem erstellen 
+    // TODO: PARAMETER MÜSSEN NOCH ANGEPASST WERDEN
     const fireA = getParticleSystem({
       camera: this.mainCamera,
       emitter: vrGroup.userData.fireEmitter1,
