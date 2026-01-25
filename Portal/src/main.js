@@ -12,6 +12,7 @@ import { ARPortalController } from "./app/ar-scene.js";
 import { VRMovementController } from "./app/vr-movement.js";
 import { PortalTransitionManager } from "./app/portalTransition.js";
 import { StoryManager } from "./app/StoryManager.js";
+import { getParticleSystem } from './app/getParticleSystem.js';
 
 
 const CONFIG = {
@@ -175,6 +176,50 @@ class PortalSystem {
     };
     console.log("✅ Portal 2 in VR-Szene erstellt bei:", this.portal2.mesh.position);
 
+    // Partikelsystem erstellen
+    const fireA = getParticleSystem({
+      camera: this.mainCamera,
+      emitter: vrGroup.userData.fireEmitter1,
+      parent: vrGroup,
+      rate: 150.0,
+      texture: '/textures/fire.png',
+      maxParticles: 2000,
+      radius: 1.0
+    });
+    
+    const fireB = getParticleSystem({
+      camera: this.mainCamera,
+      emitter: vrGroup.userData.fireEmitter2,
+      parent: this.vrGroup,
+      texture: "/textures/fire.png",
+      rate: 60,
+      radius: 0.25,
+      maxSize: 8,
+      maxLife: 1.4,
+      baseVelocity: new THREE.Vector3(0, 2.2, 0),
+    });
+
+    const fireC = getParticleSystem({
+      camera: this.mainCamera,
+      emitter: vrGroup.userData.fireEmitter3,
+      parent: this.vrGroup,
+      texture: "/textures/fire.png",
+      rate: 180,
+      radius: 1.0,
+      maxSize: 18,
+      maxLife: 2.6,
+      baseVelocity: new THREE.Vector3(0, 4.0, 0),
+      velocityJitter: new THREE.Vector3(0.6, 1.5, 0.6),
+      colorPoints: [[0.0, 0xfff2cc], [0.4, 0xff6600], [1.0, 0xaa0000]],
+    });
+
+    fireA.stop({ clear: true }); // nicht sofort laufen lassen
+    fireB.stop({ clear: true });
+    fireC.stop({ clear: true });
+    vrGroup.userData.fireA = fireA;
+    vrGroup.userData.fireB = fireB;
+    vrGroup.userData.fireC = fireC;
+
   }
 
   updatePortalCamera() {
@@ -252,6 +297,15 @@ class PortalSystem {
 
         this._lastScene = this.currentScene;
       }
+
+      //Update Partikelsystem nur, wenn in VR Welt
+      if (this.isInVRWorld) {
+        this.vrGroup?.userData?.fireA?.update?.(dt);
+        this.vrGroup?.userData?.fireB?.update?.(dt);
+        this.vrGroup?.userData?.fireC?.update?.(dt);
+      }
+
+      if (!this.isInVRWorld) stopAllFires(this.vrGroup);
 
       // 3) Danach Story pro Frame fortschreiben
       this.story.update(dt);
@@ -356,3 +410,12 @@ class PortalSystem {
 }
 const app = new PortalSystem();
 app.init();
+
+
+function stopAllFires(vrGroup) {
+  const ud = vrGroup?.userData;
+  if (!ud) return;
+  for (const k of ["fireA", "fireB", "fireC"]) {
+    ud[k]?.stop?.({ clear: true });
+  }
+}

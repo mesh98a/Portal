@@ -57,15 +57,22 @@ export class StoryManager {
     this.ctx._fades = this.ctx._fades.filter(f => f.t < f.dur);
     //console.log("vol", this.ctx.sounds.surroundings?.getVolume());
     }
+
+    const fire = this.ctx.vrGroup?.userData?.fire;
+    if (fire?.update) {
+      fire.update(dt);
+    }
   }
 
   //*  -------------- TIMELINE -------------- *//
   _buildTimeline(name) {
     if (name === "vr_intro") {
       return [
+
+        //Debug print
         { t: 0.0, run: (ctx) => console.log("VR Story Start") },
 
-        // 0) ambience starten, damit ctx.sounds.surroundings existiert
+        // 0) ambience sound starten
         { t: 0.0, run: (ctx) => playLoop(ctx, "surroundings", { volume: 0.5 }) },
 
         // 1) später: surroundings ducking + narrator startet
@@ -89,6 +96,9 @@ export class StoryManager {
             ctx.sounds.narrator1 = narrator;
             }
         }},
+        { t: 5.0, run: (ctx) => ctx.vrGroup.userData.fireA.start() },
+        { t: 5.0, run: (ctx) => ctx.vrGroup.userData.fireB.start() },
+        { t: 5.0, run: (ctx) => ctx.vrGroup.userData.fireC.start() },
       ];
     }
     return [];
@@ -149,7 +159,6 @@ export function playOnce(ctx, key, { volume = 1.0 } = {}) {
   const buffer = ctx.vrGroup?.userData?.audioBuffers?.[key];
   if (!buffer || !ctx.listener) return;
 
-  // optional: wenn schon läuft, nicht neu starten
   if (ctx.sounds[key]?.isPlaying) return;
 
   const sound = new THREE.Audio(ctx.listener);

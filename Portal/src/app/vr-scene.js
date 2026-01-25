@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+
 export async function initVRGroup() {
 
     const vrGroup = new THREE.Group();
@@ -58,11 +59,31 @@ export async function initVRGroup() {
         surroundings: surroundingsBuffer,
         narrator1: narratorBuffer1,
     };
+
+    // Objekt von dem aus Partikelsystem emitten soll
+    const fireEmitter1 = new THREE.Object3D();
+    fireEmitter1.name = "fireEmitter1";
+    // Beispielposition (MUSS NOCH ANGEPASST WERDEN)
+    fireEmitter1.position.set(0, 1, 10);
+    tempel.add(fireEmitter1);
+    vrGroup.userData.fireEmitter1 = fireEmitter1;
+
+
+    const fireEmitter2 = new THREE.Object3D();
+    fireEmitter2.name = "fireEmitter2";
+    // Beispielposition (MUSS NOCH ANGEPASST WERDEN)
+    fireEmitter2.position.set(5, 1, 8);
+    tempel.add(fireEmitter2);
+    vrGroup.userData.fireEmitter2 = fireEmitter2;
+
+    const fireEmitter3 = new THREE.Object3D();
+    fireEmitter3.name = "fireEmitter3";
+    // Beispielposition (MUSS NOCH ANGEPASST WERDEN)
+    fireEmitter3.position.set(0, 5, 0);
+    tempel.add(fireEmitter3);
+    vrGroup.userData.fireEmitter3 = fireEmitter3;
+
     return vrGroup;
 }
 
-async function loadAudioBuffer(url) {
-  const loader = new THREE.AudioLoader();
-  return await loader.loadAsync(url);
-}
 
