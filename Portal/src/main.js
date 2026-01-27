@@ -24,7 +24,7 @@ const CONFIG = {
     position: { x: 0, y: 3.0, z: -3 },
     radius: 2.5,
     zoom: 1.5,
-    resolution: 256
+    resolution: 512
   }
 };
 
@@ -43,7 +43,7 @@ class PortalSystem {
     const arbtn = createARButton(this.renderer);
 
 
-
+    this._vrAdded = false;
     // Hauptszene (wo der Spieler ist) + VR-Szene (die im Portal gerendert wird)
     this.portalScene = new THREE.Scene();
     this.vrScene = new THREE.Scene();
@@ -143,7 +143,7 @@ class PortalSystem {
       mesh: portal.mesh,
       ring: portal.ring,
     };
-    this.portalScene.add(getStarfield({ numStars: 5000 }));
+    //this.portalScene.add(getStarfield({ numStars: 5000 }));
 
   }
 
@@ -187,7 +187,7 @@ class PortalSystem {
       maxParticles: 2000,
       radius: 1.0
     });
-    
+
     const fireB = getParticleSystem({
       camera: this.mainCamera,
       emitter: vrGroup.userData.fireEmitter2,
@@ -250,6 +250,7 @@ class PortalSystem {
 
     this.renderer.setAnimationLoop((time, frame) => {
       if (!frame) return;
+      //const isXRFrame = !!frame;
       t += 0.01;
       const dt = clock.getDelta();
 
@@ -284,11 +285,19 @@ class PortalSystem {
       this.vrMove?.update();
 
       this.updatePortalCamera();
-      if (isVR) {
-        this.addPortalToVRMode();
-        if (isVR) this.portalTransition?.update();
+      console.log("isVR:", isVR, this._vrAdded);
 
+      if (isVR && !this._vrAdded) {
+        this.addPortalToVRMode();
+        this._vrAdded = true;
       }
+      if (!isVR) this._vrAdded = false;
+
+      // Portal-Transition MUSS pro Frame laufen
+      if (isVR) {
+        this.portalTransition?.update();
+      }
+
 
       if (this._lastScene !== this.currentScene) {
         this.isInVRWorld = (this.currentScene === this.vrScene);
@@ -310,7 +319,7 @@ class PortalSystem {
 
       // 3) Danach Story pro Frame fortschreiben
       this.story.update(dt);
-      
+
       this.renderer.xr.enabled = false;
       const oldTarget = this.renderer.getRenderTarget();
 
