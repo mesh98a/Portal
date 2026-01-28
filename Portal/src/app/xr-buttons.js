@@ -3,8 +3,9 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 
 export function createARButton(renderer) {
     const button = ARButton.createButton(renderer, {
-        requiredFeatures: ["local"],
-        optionalFeatures: ["hit-test", "dom-overlay", "light-estimation"]
+        requiredFeatures: ["hit-test"],
+        optionalFeatures: ["dom-overlay", "light-estimation", "local-floor"],
+        domOverlay: { root: document.body }
     });
     //button.style.position = 'relative';
     button.style.cssText = `
@@ -25,7 +26,9 @@ export function createARButton(renderer) {
 }
 
 export function createVRButton(renderer) {
-    const button = VRButton.createButton(renderer);
+    const button = VRButton.createButton(renderer,{
+      optionalFeatures: ["local-floor", "bounded-floor", "hand-tracking"]
+    });
     button.style.cssText = `
     position: absolute;
     bottom: 20px;

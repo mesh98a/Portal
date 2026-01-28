@@ -5,7 +5,8 @@ export default defineConfig({
   base: "/",
   plugins: [basicSsl()],
   server: {
-    https: false,
-    host: false, // wichtig für Android / AR / Netzwerk
+    https: true,
+    port: 5173,
+    host: true, // wichtig für Android / AR / Netzwerk
   },
 })

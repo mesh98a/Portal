@@ -37,12 +37,39 @@ class PortalSystem {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.xr.enabled = true;
+    
+    this.renderer.xr.addEventListener("sessionstart", () => {
+      const session = this.renderer.xr.getSession();
+      const isVR = session?.environmentBlendMode === "opaque";
+
+      if (!this.player) return; // init() hat noch nicht setupPlayer gemacht
+
+      if (isVR) {
+        // in VR-Welt starten
+        this.currentScene.remove(this.player);
+        this.currentScene = this.vrScene;
+        this.vrScene.add(this.player);
+
+        //sauberer Startpunkt in VR-Welt
+        this.player.position.set(0, 0, 0);
+      } else {
+        // AR-Session: in Portal-Szene starten
+        this.currentScene.remove(this.player);
+        this.currentScene = this.portalScene;
+        this.portalScene.add(this.player);
+      }
+    });
+    
+    this.renderer.xr.addEventListener("sessionend", () => {
+      if (!this.player) return;
+      this.currentScene.remove(this.player);
+      this.currentScene = this.portalScene;
+      this.portalScene.add(this.player);
+    });
 
     document.body.appendChild(this.renderer.domElement);
     const vrbtn = createVRButton(this.renderer);
     const arbtn = createARButton(this.renderer);
-
-
 
     // Hauptszene (wo der Spieler ist) + VR-Szene (die im Portal gerendert wird)
     this.portalScene = new THREE.Scene();
@@ -75,6 +102,12 @@ class PortalSystem {
       depthBuffer: true,
       stencilBuffer: false,
     });
+
+     //***NEW***
+    this._mFlip = new THREE.Matrix4().makeRotationY(Math.PI);
+    this._mSrcInv = new THREE.Matrix4();
+    this.portalRT.texture.colorSpace = THREE.SRGBColorSpace;
+    this.portalRT2.texture.colorSpace = THREE.SRGBColorSpace;
 
     this.reticle = null;
     this.hitTestSourceRequested = false;
@@ -115,13 +148,15 @@ class PortalSystem {
 
   async setupPortalScene() {
 
-
-    const portal = createPortal({
+    this.portal = createPortal({
       portalConfig: CONFIG.portal,
       portalPosition: new THREE.Vector3(0, 3.0, -3),
       portalRT: this.portalRT,
       color: 0x00ffff
     });
+
+    this.portalScene.add(this.portal.mesh);
+    this.portalScene.add(this.portal.ring);
 
     this.portalScene.add(new THREE.AmbientLight(0xffffff, 0.4));
     const spotlight = new THREE.SpotLight(0x00ffff, 2);
@@ -139,10 +174,6 @@ class PortalSystem {
     this.ground.userData.excludeFromAR = true;
     this.portalScene.add(this.ground);
 
-    this.portal = {
-      mesh: portal.mesh,
-      ring: portal.ring,
-    };
     this.portalScene.add(getStarfield({ numStars: 5000 }));
 
   }
@@ -223,32 +254,19 @@ class PortalSystem {
 
   }
 
-  updatePortalCamera() {
-    if (this.isInVRWorld) {
-      // Zeige Portal-Szene im Portal 2
-      this.portalCamera.position.set(-2, 3, 5);
-      this.portalCamera.lookAt(-1, 1.6, -3); // Schaue in Portal-Szene
-    } else {
-      // Zeige VR-Szene im Portal 1
-      this.portalCamera.position.set(3, 2, 6);
-      this.portalCamera.lookAt(1, 1, 0); // Schaue in VR-Szene
-    }
-  }
-
   addPortalToVRMode() {
-    this.portalScene.add(this.portal.mesh, this.portal.ring);
-    this.vrScene.add(this.portal2.mesh, this.portal2.ring);
+     if (this._vrDecorAdded) return;
+    this._vrDecorAdded = true;
+
     const { leftWall, rightWall, topWall } = createPortalFrame();
-    this.portalScene.add(leftWall);
-    this.portalScene.add(rightWall);
-    this.portalScene.add(topWall);
+    this.portalScene.add(leftWall, rightWall, topWall);
   }
 
   start() {
     let t = 0;
     const clock = new THREE.Clock();
 
-    this.renderer.setAnimationLoop((time, frame) => {
+    this.renderer.setAnimationLoop((t, frame) => {
       if (!frame) return;
       t += 0.01;
       const dt = clock.getDelta();
@@ -272,6 +290,13 @@ class PortalSystem {
       const isVR = this.renderer.xr.isPresenting &&
         session?.environmentBlendMode === "opaque";
 
+      //setzt spieler offset wenn in AR session UND vrScene
+      if (isAR && this.currentScene === this.vrScene) {
+        this.player.position.y = 1.6;   // oder 1.7
+      } else if (isAR) {
+        this.player.position.y = 0.0;   // draußen in AR wieder "neutral"
+      }
+
       this.arPortal.hitTestProcess(frame, referenceSpace, session);
 
       if (this.ground) {
@@ -283,11 +308,10 @@ class PortalSystem {
       // VR CONTROLLER BEWEGUNG
       this.vrMove?.update();
 
-      this.updatePortalCamera();
+      this.portalTransition?.update();
+
       if (isVR) {
         this.addPortalToVRMode();
-        if (isVR) this.portalTransition?.update();
-
       }
 
       if (this._lastScene !== this.currentScene) {
@@ -308,27 +332,35 @@ class PortalSystem {
 
       if (!this.isInVRWorld) stopAllFires(this.vrGroup);
 
-      // 3) Danach Story pro Frame fortschreiben
+      //Danach Story pro Frame fortschreiben
       this.story.update(dt);
       
+            // --- RenderTargets (Portale) ---
       this.renderer.xr.enabled = false;
       const oldTarget = this.renderer.getRenderTarget();
 
-      this.portal2.mesh.visible = false; // Portal 2 verstecken
+      // Portal 1 (in portalScene) zeigt vrScene
+      this.updatePortalCameraFromPortals(this.portal.mesh, this.portal2.mesh);
+
+      // Portal2 kurz verstecken, damit keine Rekursion entsteht
+      this.portal2.mesh.visible = false;
       this.portal2.ring.visible = false;
 
       this.renderer.setRenderTarget(this.portalRT);
       this.renderer.clear(true, true, true);
       this.renderer.render(this.vrScene, this.portalCamera);
 
-
       this.portal2.mesh.visible = true;
       this.portal2.ring.visible = true;
 
+
+      // Portal 2 (in vrScene) zeigt portalScene
+      this.updatePortalCameraFromPortals(this.portal2.mesh, this.portal.mesh);
+
+      // Portal1 verstecken (auch hier Rekursion vermeiden)
       this.portal.mesh.visible = false;
       this.portal.ring.visible = false;
 
-      // ✅ Portal 2: Zeigt Portal-Szene (Rückblick)
       this.renderer.setRenderTarget(this.portalRT2);
       this.renderer.clear(true, true, true);
       this.renderer.render(this.portalScene, this.portalCamera);
@@ -336,12 +368,14 @@ class PortalSystem {
       this.portal.mesh.visible = true;
       this.portal.ring.visible = true;
 
+
+      // Restore
       this.renderer.setRenderTarget(oldTarget);
-
-
       this.renderer.xr.enabled = true;
+
       this.renderer.clear(!isAR, true, true);
       this.renderer.render(this.currentScene, this.mainCamera);
+
     });
   }
 
@@ -363,7 +397,6 @@ class PortalSystem {
 
 
     // Starte in der Portal-Szene (vor dem Portal)
-    this.portalScene.add(this.player);
     this.currentScene = this.portalScene;
     this.currentScene.add(this.player)
     this.lastPlayerZ = this.player.position.z;
@@ -402,12 +435,49 @@ class PortalSystem {
         teleportZ: -5,
       },
       portal2: {
-        position: { x: 0, y: 2, z: 2 },
+        position: this.portal2.mesh.position,
         triggerZ: 2.5,
         teleportZ: 2,
       },
     });
   }
+
+  updatePortalCameraFromPortals(srcPortalMesh, dstPortalMesh) {
+  // XR: ArrayCamera, Desktop: mainCamera
+  const xrCam = this.renderer.xr.isPresenting
+    ? this.renderer.xr.getCamera(this.mainCamera)
+    : this.mainCamera;
+
+  // Für mono-Portal nehmen wir ein Auge (0)
+  const viewerCam = (xrCam && xrCam.isArrayCamera) ? xrCam.cameras[0] : xrCam;
+
+  viewerCam.updateMatrixWorld(true);
+  srcPortalMesh.updateMatrixWorld(true);
+  dstPortalMesh.updateMatrixWorld(true);
+
+  // dst * flip * inv(src) * viewer
+  this._mSrcInv.copy(srcPortalMesh.matrixWorld).invert();
+
+  this.portalCamera.matrixWorld
+    .copy(dstPortalMesh.matrixWorld)
+    .multiply(this._mFlip)
+    .multiply(this._mSrcInv)
+    .multiply(viewerCam.matrixWorld);
+
+  this.portalCamera.matrixWorld.decompose(
+    this.portalCamera.position,
+    this.portalCamera.quaternion,
+    this.portalCamera.scale
+  );
+
+  // Projection vom Viewer übernehmen (wichtig für FOV/“fühlt sich echt an”)
+  this.portalCamera.projectionMatrix.copy(viewerCam.projectionMatrix);
+  this.portalCamera.projectionMatrixInverse.copy(viewerCam.projectionMatrixInverse);
+
+  this.portalCamera.updateMatrixWorld(true);
+}
+
+
 }
 const app = new PortalSystem();
 app.init();
