@@ -37,7 +37,7 @@ npm run dev
 # Quellen:
 - [Code für Sterne](https://github.com/bobbyroe/3d-globe-with-threejs/blob/main/src/getStarfield.js)
 - [Tutorial für Basiskonzepte des Portals und AR Debugging](https://www.youtube.com/watch?v=wmZxBMHWQAs)
-- 
+- [RenderTarget Idee](https://medium.com/@petercoolen/breaking-down-the-portal-effect-how-to-create-an-immersive-ar-experience-9654aa882c13)
 
 
 
