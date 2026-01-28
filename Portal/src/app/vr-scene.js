@@ -47,6 +47,7 @@ export async function initVRGroup() {
     //um später tempel objekt wieder abrufen zu können
     vrGroup.userData.temple = tempel;
 
+    
 
     /* ---------- AUDIO LADEN ---------- */
     // Quellen: https://pixabay.com/de/sound-effects/natur-mountain-forest-high-quality-sound-176826/

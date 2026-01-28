@@ -24,7 +24,7 @@ const CONFIG = {
     position: { x: 0, y: 3.0, z: -3 },
     radius: 2.5,
     zoom: 1.5,
-    resolution: 256
+    resolution: 512
   }
 };
 
@@ -71,6 +71,8 @@ class PortalSystem {
     const vrbtn = createVRButton(this.renderer);
     const arbtn = createARButton(this.renderer);
 
+    this._vrAdded = false;
+    
     // Hauptszene (wo der Spieler ist) + VR-Szene (die im Portal gerendert wird)
     this.portalScene = new THREE.Scene();
     this.vrScene = new THREE.Scene();
@@ -218,7 +220,7 @@ class PortalSystem {
       maxParticles: 2000,
       radius: 1.0
     });
-    
+
     const fireB = getParticleSystem({
       camera: this.mainCamera,
       emitter: vrGroup.userData.fireEmitter2,
@@ -268,6 +270,7 @@ class PortalSystem {
 
     this.renderer.setAnimationLoop((t, frame) => {
       if (!frame) return;
+      //const isXRFrame = !!frame;
       t += 0.01;
       const dt = clock.getDelta();
 
@@ -310,9 +313,17 @@ class PortalSystem {
 
       this.portalTransition?.update();
 
-      if (isVR) {
+      if (isVR && !this._vrAdded) {
         this.addPortalToVRMode();
+        this._vrAdded = true;
       }
+      if (!isVR) this._vrAdded = false;
+
+      // Portal-Transition MUSS pro Frame laufen
+      if (isVR) {
+        this.portalTransition?.update();
+      }
+
 
       if (this._lastScene !== this.currentScene) {
         this.isInVRWorld = (this.currentScene === this.vrScene);
