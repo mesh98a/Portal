@@ -4,7 +4,7 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 export function createARButton(renderer) {
     const button = ARButton.createButton(renderer, {
         requiredFeatures: ["hit-test"],
-        optionalFeatures: ["dom-overlay", "light-estimation", "local-floor"],
+        optionalFeatures: ["dom-overlay", "light-estimation", "local-floor",'bounded-floor', 'plane-detection'],
         domOverlay: { root: document.body }
     });
     //button.style.position = 'relative';

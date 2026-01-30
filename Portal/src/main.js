@@ -34,7 +34,7 @@ class PortalSystem {
     const res = Math.max(1, CONFIG.portal.resolution || 256);
 
     // Renderer + Szenen
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.xr.enabled = true;
     
@@ -176,16 +176,16 @@ class PortalSystem {
     this.ground.userData.excludeFromAR = true;
     this.portalScene.add(this.ground);
 
-    this.portalScene.add(getStarfield({ numStars: 5000 }));
+    //this.portalScene.add(getStarfield({ numStars: 5000 }));
 
   }
 
   async setupVRScene() {
     // Skybox für VR-Welt
-    const skytexture = await new THREE.TextureLoader().loadAsync("/Skyboxes/forest_slope_4k.png");
+    this.vrScene.background = null;
+    /* const skytexture = await new THREE.TextureLoader().loadAsync("/Skyboxes/forest_slope_4k.png");
     skytexture.colorSpace = THREE.SRGBColorSpace;
-    skytexture.mapping = THREE.EquirectangularReflectionMapping;
-    this.vrScene.background = skytexture;
+    skytexture.mapping = THREE.EquirectangularReflectionMapping; */
 
     const vrGroup = await initVRGroup();
     this.vrGroup = vrGroup;
@@ -198,7 +198,8 @@ class PortalSystem {
       portalConfig: CONFIG.portal,
       portalPosition: new THREE.Vector3(0, 3, 2),
       portalRT: this.portalRT2,
-      color: 0xff00ff
+      color: 0xff00ff,
+      isPassthrough: true
     });
 
     this.vrScene.add(this.portal2.mesh);
@@ -260,8 +261,8 @@ class PortalSystem {
      if (this._vrDecorAdded) return;
     this._vrDecorAdded = true;
 
-    const { leftWall, rightWall, topWall } = createPortalFrame();
-    this.portalScene.add(leftWall, rightWall, topWall);
+    //const { leftWall, rightWall, topWall } = createPortalFrame();
+    //this.portalScene.add(leftWall, rightWall, topWall);
   }
 
   start() {
@@ -430,27 +431,20 @@ class PortalSystem {
 
   setupPortalDetection() {
     this.portalTransition = new PortalTransitionManager({
-      player: this.player,
-      portalScene: this.portalScene,
-      vrScene: this.vrScene,
-
-      getCurrentScene: () => this.currentScene,
-      setCurrentScene: (s) => (this.currentScene = s),
-
-      radius: CONFIG.portal.radius,
-      cooldownFrames: 120,
-
-      portal1: {
-        position: CONFIG.portal.position,
-        triggerZ: -2.5,
-        teleportZ: -5,
-      },
-      portal2: {
-        position: this.portal2.mesh.position,
-        triggerZ: 2.5,
-        teleportZ: 2,
-      },
+        player: this.player,
+        portalScene: this.portalScene,
+        vrScene: this.vrScene,
+        getCurrentScene: () => this.currentScene,
+        setCurrentScene: (s) => (this.currentScene = s),
+        radius: CONFIG.portal.radius,
+        portal1: this.portal,
+        portal2: this.portal2
     });
+
+    this.portal.triggerZ = -0.5; // Relativ zum Portal-Mesh
+    this.portal.teleportZ = -3;
+    this.portal2.triggerZ = 0.5;
+    this.portal2.teleportZ = 2;
   }
 
   updatePortalCameraFromPortals(srcPortalMesh, dstPortalMesh) {

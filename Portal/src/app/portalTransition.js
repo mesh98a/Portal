@@ -30,6 +30,14 @@ export class PortalTransitionManager {
         this.cooldown = 0;
 
         this.isInVRWorld = false;
+        this._tempPortalPos = new THREE.Vector3();
+        this.audioBuffers = {}; // Speicher für vorgeladene Sounds
+        this.listener = new THREE.AudioListener();
+        this.player.add(this.listener);
+        
+        // Sounds direkt beim Start laden
+        this.preloadAudio("/audio/whoosh-flanging.mp3", "enter");
+        this.preloadAudio("/audio/whoosh-motion.mp3", "exit");
     }
 
     update() {
@@ -42,22 +50,32 @@ export class PortalTransitionManager {
 
         if (!this.isInVRWorld) {
             // Eintritt Portal 1
-            const pos = this.portal1.position;
-            const withinXY =
-                Math.abs(p.x - pos.x) < this.radius &&
-                Math.abs(p.y - pos.y) < this.radius * 1.5;
+            if (!this.portal1?.mesh || !this.portal1.isPlaced) return;
 
-            if (withinXY && p.z < this.portal1.triggerZ) {
+            this.portal1.mesh.getWorldPosition(this._tempPortalPos);
+            
+            const withinXY =
+                Math.abs(p.x - this._tempPortalPos.x) < this.radius &&
+                Math.abs(p.y - this._tempPortalPos.y) < this.radius * 1.5;
+
+            // BERECHNUNG: Wie weit ist der Spieler vom Portal auf der Z-Achse entfernt?
+            const distZ = p.z - this._tempPortalPos.z;
+
+            if (withinXY && distZ < 0 && distZ > -0.5) {
                 this.enterVRWorld();
             }
         } else {
             // Exit Portal 2
-            const pos = this.portal2.position;
-            const withinXY =
-                Math.abs(p.x - pos.x) < this.radius &&
-                Math.abs(p.y - pos.y) < this.radius * 1.5;
+            if (!this.portal2.mesh) return;
+            this.portal2.mesh.getWorldPosition(this._tempPortalPos);
 
-            if (withinXY && p.z > this.portal2.triggerZ) {
+            const withinXY =
+                Math.abs(p.x - this._tempPortalPos.x) < this.radius &&
+                Math.abs(p.y - this._tempPortalPos.y) < this.radius * 1.5;
+
+            const distZ = p.z - this._tempPortalPos.z;
+
+            if (withinXY && distZ > 0 && distZ < 0.5) {
                 this.exitVRWorld();
             }
         }
@@ -65,6 +83,7 @@ export class PortalTransitionManager {
 
     enterVRWorld() {
         console.log("🌀 Portal betreten → VR-Welt!");
+        this.playAudio("enter");
         this.isInVRWorld = true;
         this.cooldown = this.cooldownFrames;
 
@@ -79,6 +98,7 @@ export class PortalTransitionManager {
 
     exitVRWorld() {
         console.log("🚪 Portal verlassen → Portal-Szene!");
+        this.playAudio("exit");
         this.isInVRWorld = false;
         this.cooldown = this.cooldownFrames;
 
@@ -89,5 +109,43 @@ export class PortalTransitionManager {
         this.portalScene.add(this.player);
 
         this.player.position.set(this.player.position.x, this.player.position.y, this.portal2.teleportZ);
+
+        const forward = new THREE.Vector3();
+        this.player.getWorldDirection(forward);
+
+        //zwei Meter hinter dem Player
+        const backOffset = forward.clone().multiplyScalar(-2.0);
+        const newPortalPos = this.player.position.clone().add(backOffset);
+
+        if (this.portal1?.mesh) {
+            this.portal1.mesh.position.copy(newPortalPos);
+            this.portal1.ring.position.copy(newPortalPos);
+            
+            // Portal zum Spieler ausrichten (damit man die Vorderseite sieht)
+            this.portal1.mesh.lookAt(this.player.position.x, 1.5, this.player.position.z);
+            this.portal1.ring.quaternion.copy(this.portal1.mesh.quaternion);
+            
+            this.portal1.mesh.updateMatrixWorld(true);
+        }
     }
+
+    async playAudio(key){
+        const buffer = this.audioBuffers[key];
+        if (buffer) {
+            const sound = new THREE.Audio(this.listener);
+            sound.setBuffer(buffer);
+            sound.setVolume(0.5);
+            sound.play();
+        }
+    }
+
+    async preloadAudio(url, key) {
+    const loader = new THREE.AudioLoader();
+    try {
+        const buffer = await loader.loadAsync(url);
+        this.audioBuffers[key] = buffer;
+    } catch (e) {
+        console.error("Audio konnte nicht geladen werden:", url);
+    }
+}
 }

@@ -14,6 +14,7 @@ export class ARPortalController {
         this.hitTestSource = null;
 
         this.activePortal = null;
+        this.isPlaced = false;
     }
 
     setupReticle() {
@@ -48,11 +49,17 @@ export class ARPortalController {
         this.reticle.matrix.decompose(pos, quat, scale);
 
         // Portal dort platzieren, wo die Reticle ist
-        const offset = new THREE.Vector3(1, 1, -5);
+        const offset = new THREE.Vector3(0, 0, -2);
         const p = pos.clone().add(offset);
 
         this.portal.mesh.position.copy(p);
         this.portal.ring.position.copy(p);
+
+        /* this.portal.mesh.position.copy(pos);
+        this.portal.ring.position.copy(pos); */
+
+        this.portal.mesh.updateMatrixWorld(true);
+        this.portal.isPlaced = true;
 
         const e = new THREE.Euler().setFromQuaternion(quat, "YXZ");
         e.x = 0;
@@ -67,44 +74,38 @@ export class ARPortalController {
     }
 
     hitTestProcess(frame, referenceSpace, session) {
-        const isAR =
-            this.renderer.xr.isPresenting &&
-            session?.environmentBlendMode === "alpha-blend";
+        // Vereinfachte Prüfung: Wenn wir ein Frame und eine Session haben, sind wir bereit
+        if (!this.reticle || !frame || !session) return;
 
-        if (!this.reticle) return;
-
-        if (isAR && frame && referenceSpace) {
-            if (!this.hitTestSourceRequested) {
-                session.requestReferenceSpace("viewer").then((viewerSpace) => {
-                    session.requestHitTestSource({ space: viewerSpace }).then((source) => {
-                        this.hitTestSource = source;
-                    });
+        if (!this.hitTestSourceRequested) {
+            session.requestReferenceSpace("viewer").then((viewerSpace) => {
+                session.requestHitTestSource({ space: viewerSpace }).then((source) => {
+                    this.hitTestSource = source;
                 });
+            });
 
-                session.addEventListener("end", () => {
-                    this.hitTestSourceRequested = false;
-                    this.hitTestSource = null;
-                });
+            session.addEventListener("end", () => {
+                this.hitTestSourceRequested = false;
+                this.hitTestSource = null;
+                this.reticle.visible = false; // Reticle beim Beenden ausblenden
+            });
 
-                this.hitTestSourceRequested = true;
-            }
+            this.hitTestSourceRequested = true;
+        }
 
-            if (this.hitTestSource) {
-                const hitTestResults = frame.getHitTestResults(this.hitTestSource);
-                if (hitTestResults.length) {
-                    const hit = hitTestResults[0];
-                    const pose = hit.getPose(referenceSpace);
+        if (this.hitTestSource) {
+            const hitTestResults = frame.getHitTestResults(this.hitTestSource);
+            if (hitTestResults.length > 0) {
+                const hit = hitTestResults[0];
+                const pose = hit.getPose(referenceSpace);
 
-                    if (pose) {
-                        this.reticle.visible = true;
-                        this.reticle.matrix.fromArray(pose.transform.matrix);
-                        return;
-                    }
+                if (pose) {
+                    this.reticle.visible = true;
+                    this.reticle.matrix.fromArray(pose.transform.matrix);
                 }
+            } else {
                 this.reticle.visible = false;
             }
-        } else {
-            this.reticle.visible = false;
         }
     }
 }

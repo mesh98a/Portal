@@ -1,20 +1,36 @@
 // portal.js
 import * as THREE from "three";
 
-export  function createPortal({ portalConfig, portalPosition, portalRT,color}) {
-
-  const { position, radius } = portalConfig
+export function createPortal({ portalConfig, portalPosition, portalRT, color, isPassthrough = false }) {
+  const { radius } = portalConfig;
 
   const portalGeo = new THREE.CircleGeometry(radius, 64);
-  const portalMat = new THREE.MeshBasicMaterial({
-    map: portalRT.texture,
-    side: THREE.DoubleSide,
-  });
+  
+  let portalMat;
+  
+  if (isPassthrough) {
+    // --- PASSTHROUGH LOGIK ---
+    //material ist "durchsichtig" --> Loch/Stencil in der VR-Welt in der reale Welt
+    portalMat = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.NoBlending,
+    });
+  } else {
+    // Standard Portal-Logik (zeigt die andere Szene)
+    portalMat = new THREE.MeshBasicMaterial({
+      map: portalRT.texture,
+      side: THREE.DoubleSide,
+    });
+  }
 
   const portalMesh = new THREE.Mesh(portalGeo, portalMat);
+  if (isPassthrough) portalMesh.renderOrder = -1;
+
   portalMesh.position.copy(portalPosition);
 
-  // Portal-Ring
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(radius, radius + 0.08, 64),
     new THREE.MeshBasicMaterial({
@@ -22,16 +38,9 @@ export  function createPortal({ portalConfig, portalPosition, portalRT,color}) {
       side: THREE.DoubleSide
     })
   );
-
   ring.position.copy(portalMesh.position);
 
-  // Speichern
-  const portal = {
-    mesh: portalMesh,
-    ring: ring
-  };
-
-  return portal;
+  return { mesh: portalMesh, ring: ring };
 }
 
 

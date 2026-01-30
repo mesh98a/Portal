@@ -16,13 +16,33 @@ export async function initVRGroup() {
     dir.castShadow = true;
     vrGroup.add(dir);
 
+    /* ---------- SPHERE SKYBOX -------------*/
+    const loader = new THREE.TextureLoader();
+    const skytexture = await loader.loadAsync("/Skyboxes/forest_slope_4k.png");
+    skytexture.colorSpace = THREE.SRGBColorSpace;
+    skytexture.mapping = THREE.EquirectangularReflectionMapping;
+
+    //Geometrie erstellen (riesige Kugel)
+    const skyGeo = new THREE.SphereGeometry(400, 64, 64);
+
+    //Material erstellen
+    const skyMat = new THREE.MeshBasicMaterial({
+        map: skytexture,
+        side: THREE.BackSide, //Textur nach innen rendern
+        depthWrite: false
+    });
+
+    //Mesh erstellen und zur VR-Szene hinzufügen
+    const skySphere = new THREE.Mesh(skyGeo, skyMat);
+    skySphere.renderOrder = 0;
+    vrGroup.add(skySphere);
+
+
     /* ---------- GROUND PLANE ---------- */
     const planeGeometry = new THREE.PlaneGeometry(500, 500);
 
     const texLoader = new THREE.TextureLoader();
-    const groundTex = await texLoader.loadAsync(
-        "/textures/rocky_terrain_02_diff_4k.jpg"
-    );
+    const groundTex = await texLoader.loadAsync("/textures/rocky_terrain_02_diff_4k.jpg");
 
     groundTex.colorSpace = THREE.SRGBColorSpace;
     groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
@@ -34,7 +54,7 @@ export async function initVRGroup() {
     plane.receiveShadow = true;
 
     vrGroup.add(plane);
-    //applyPortalStencil(plane);
+
 
     /* ---------- GLTF MODEL ---------- */
     const gltfLoader = new GLTFLoader();

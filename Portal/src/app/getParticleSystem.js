@@ -78,25 +78,25 @@ function getParticleSystem(params) {
     parent,
     texture,
 
-    // Instanz-Optionen (Defaults bleiben nah an deinem Code)
+    // Instanz-Optionen
     rate = 80,
     maxParticles = 2000,
 
-    radius = 0.5,                 // einfacher Spawn: Würfel um Emitter
+    radius = 0.5,
     maxLife = 2.5,
     maxSize = 5.0,
 
     baseVelocity = new THREE.Vector3(0, 3.5, 0),
-    velocityJitter = new THREE.Vector3(0.0, 0.0, 0.0), // optional
+    velocityJitter = new THREE.Vector3(0.0, 0.0, 0.0),
 
-    dragCoeff = 0.1,              // dein dt*0.1
+    dragCoeff = 0.1,
 
     // Kurven optional überschreibbar
     alphaPoints = [[0.0, 0.0], [0.6, 1.0], [1.0, 0.0]],
     colorPoints = [[0.0, 0xFFFFFF], [1.0, 0xff8080]],
     sizePoints  = [[0.0, 0.0], [1.0, 1.0]],
 
-    intensity = 1.0,              // skaliert Rate (0..1)
+    intensity = 1.0,
   } = params;
 
   const tex = new THREE.TextureLoader().load(texture);
@@ -212,7 +212,6 @@ function getParticleSystem(params) {
 
       p.position.addScaledVector(p.velocity, dt);
 
-      // drag (wie bei dir, nur coeff parametrierbar)
       const drag = p.velocity.clone().multiplyScalar(dt * cfg.dragCoeff);
       drag.x = Math.sign(p.velocity.x) * Math.min(Math.abs(drag.x), Math.abs(p.velocity.x));
       drag.y = Math.sign(p.velocity.y) * Math.min(Math.abs(drag.y), Math.abs(p.velocity.y));
@@ -255,7 +254,7 @@ function getParticleSystem(params) {
     }
   }
 
-  // Minimal-flexibel: Optionen zur Laufzeit setzen
+  //Optionen zur Laufzeit setzen
   function setOptions(o = {}) {
     if (o.rate != null) cfg.rate = o.rate;
     if (o.maxParticles != null) cfg.maxParticles = o.maxParticles;
