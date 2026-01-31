@@ -45,18 +45,26 @@ class PortalSystem {
       if (!this.player) return; // init() hat noch nicht setupPlayer gemacht
 
       if (isVR) {
+        if (this.player.parent) this.player.parent.remove(this.player);
         // in VR-Welt starten
-        this.currentScene.remove(this.player);
+        //this.currentScene.remove(this.player);
         this.currentScene = this.vrScene;
         this.vrScene.add(this.player);
 
         // Startpunkt in VR-Welt
         this.player.position.set(0, 0, 0);
+        //UI/Canvas unsichtbar machen
+        if (this.ui) this.ui.visible = false;
+
+        console.log("VR Session gestartet: Wechsle zu vrScene");
       } else {
+        if (this.player.parent) this.player.parent.remove(this.player);
         // AR-Session: in Portal-Szene starten
-        this.currentScene.remove(this.player);
+        //this.currentScene.remove(this.player);
         this.currentScene = this.portalScene;
         this.portalScene.add(this.player);
+        
+        console.log("AR Session gestartet: Wechsle zu portalScene");
       }
     });
     

@@ -25,6 +25,9 @@ export class ARPortalController {
 
         this.reticle.matrixAutoUpdate = false;
         this.reticle.visible = false;
+
+        this.reticle.renderOrder = 999; 
+        this.reticle.material.depthTest = false;
         
         this.reticle.raycast = () => {};
 
@@ -94,6 +97,11 @@ export class ARPortalController {
         // Vereinfachte Prüfung: Wenn wir ein Frame und eine Session haben, sind wir bereit
         if (!this.reticle || !frame || !session) return;
 
+        if (session.environmentBlendMode !== "alpha-blend") {
+            this.reticle.visible = false;
+            return;
+        }
+
         if (!this.hitTestSourceRequested) {
             session.requestReferenceSpace("viewer").then((viewerSpace) => {
                 session.requestHitTestSource({ space: viewerSpace }).then((source) => {
@@ -119,6 +127,12 @@ export class ARPortalController {
                 if (pose) {
                     this.reticle.visible = true;
                     this.reticle.matrix.fromArray(pose.transform.matrix);
+                    if (this.isPlaced) {
+                    const dist = this.reticle.position.distanceTo(this.portal.mesh.position);
+                    if (dist < 0.1) {
+                            this.reticle.visible = false; 
+                        }
+                    }
                 }
             } else {
                 this.reticle.visible = false;

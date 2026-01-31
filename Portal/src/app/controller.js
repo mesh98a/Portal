@@ -4,16 +4,15 @@
     const controller1 = renderer.xr.getController(0);
     const controller2 = renderer.xr.getController(1);
 
-    controller1.addEventListener("select", onSelect.bind(this));
-
-
+    controller1.addEventListener("select", onSelect);
+    controller2.addEventListener("select", onSelect);
 
     const controllerGrip1 = renderer.xr.getControllerGrip(0);
     const controllerGrip2 = renderer.xr.getControllerGrip(1);
 
     const gripGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.15);
-    const gripMaterial1 = new THREE.MeshStandardMaterial({ color: "red" });
-    const gripMaterial2 = new THREE.MeshStandardMaterial({ color: "blue" });
+    const gripMaterial1 = new THREE.MeshBasicMaterial({ color: "red" });
+    const gripMaterial2 = new THREE.MeshBasicMaterial({ color: "blue" });
 
     controllerGrip1.add(new THREE.Mesh(gripGeometry, gripMaterial1));
     controllerGrip2.add(new THREE.Mesh(gripGeometry, gripMaterial2));
