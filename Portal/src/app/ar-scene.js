@@ -43,23 +43,30 @@ export class ARPortalController {
 
         console.log("➕ Neues Portal erstellen");
 
+        if (!this.isPlaced) {
+            this.portalScene.add(this.portal.mesh, this.portal.ring);
+            this.isPlaced = true;
+        }
+        
+        this.portal.mesh.visible = true;
+        this.portal.ring.visible = true;
+
         const pos = new THREE.Vector3();
         const quat = new THREE.Quaternion();
         const scale = new THREE.Vector3();
         this.reticle.matrix.decompose(pos, quat, scale);
 
         // Portal dort platzieren, wo die Reticle ist
-        const offset = new THREE.Vector3(0, 0, -2);
+       /*  const offset = new THREE.Vector3(0, 0, -2);
         const p = pos.clone().add(offset);
 
         this.portal.mesh.position.copy(p);
-        this.portal.ring.position.copy(p);
+        this.portal.ring.position.copy(p); */
 
-        /* this.portal.mesh.position.copy(pos);
-        this.portal.ring.position.copy(pos); */
+        this.portal.mesh.position.copy(pos);
+        this.portal.ring.position.copy(pos);
 
-        this.portal.mesh.updateMatrixWorld(true);
-        this.portal.isPlaced = true;
+       
 
         const e = new THREE.Euler().setFromQuaternion(quat, "YXZ");
         e.x = 0;
@@ -67,6 +74,9 @@ export class ARPortalController {
 
         this.portal.mesh.quaternion.setFromEuler(e);
         this.portal.ring.quaternion.copy(this.portal.mesh.quaternion);
+
+        this.portal.mesh.updateMatrixWorld(true);
+        this.portal.isPlaced = true;
 
         this.portalScene.add(this.portal.mesh, this.portal.ring);
 

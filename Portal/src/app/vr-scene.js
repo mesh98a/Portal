@@ -61,13 +61,55 @@ export async function initVRGroup() {
 
     const gltf = await gltfLoader.loadAsync('/Assets/Kinkakuji/scene.gltf');
     const tempel = gltf.scene;
-    tempel.position.set(-10, 0, -30);
+    tempel.scale.set(0.9,0.9,0.9)
+    tempel.position.set(-10, -0.5, -30);
     vrGroup.add(tempel);
 
     //um später tempel objekt wieder abrufen zu können
     vrGroup.userData.temple = tempel;
 
-    
+    //Charakter laden
+    gltfLoader.load(
+        "/Assets/Character/mockup.glb",
+        (gltf) => {
+            const mockup = gltf.scene;
+            mockup.traverse((obj) => {
+            if (obj.isMesh || obj.isSkinnedMesh) {
+                obj.frustumCulled = false;
+            }
+            });
+            
+            vrGroup.add(mockup);
+
+            mockup.position.set(0,0.05,-18);
+            //mockup.scale.set(7,7,7);
+
+            //um zu gucken, welche Animationen es gibt
+            console.log("Animation Clips:");
+            gltf.animations.forEach((clip, i) => {
+            console.log(i, clip.name, "duration:", clip.duration, "tracks:", clip.tracks.length);
+            });
+
+            const mixer = new THREE.AnimationMixer(mockup);
+            const clips = gltf.animations;
+            if (clips.length > 0) {
+                const action = mixer.clipAction(clips[0]);
+                action.play();
+            }
+
+            vrGroup.userData.mixer = mixer;
+            vrGroup.userData.mockup = mockup;
+
+        },
+
+        (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% geladen');
+        },
+        (error) => {
+            console.error("Ein GLB Fehler ist aufgetreten:", error);
+        }
+
+    );
 
     /* ---------- AUDIO LADEN ---------- */
     // Quellen: https://pixabay.com/de/sound-effects/natur-mountain-forest-high-quality-sound-176826/
@@ -75,10 +117,14 @@ export async function initVRGroup() {
     const audioLoader = new THREE.AudioLoader();
     const surroundingsBuffer  = await audioLoader.loadAsync("/audio/mountain-forest-high-quality-sound.mp3");
     const narratorBuffer1 = await audioLoader.loadAsync("/audio/Erzähler_Einleitung_Wilhelm - Mature Narrator.mp3");
+    const monkBuffer = await audioLoader.loadAsync("/audio/Mönch_kürzerer_Text_Niklas Neumann.mp3");
+    const narratorBuffer2 = await audioLoader.loadAsync("/audio/Erzähler_Ende_Wilhelm - Mature Narrator.mp3");
 
     vrGroup.userData.audioBuffers = {
         surroundings: surroundingsBuffer,
         narrator1: narratorBuffer1,
+        monk: monkBuffer,
+        narrator2: narratorBuffer2,
     };
 
     // Objekt von dem aus Partikelsystem emitten soll

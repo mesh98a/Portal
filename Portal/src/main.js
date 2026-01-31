@@ -156,9 +156,11 @@ class PortalSystem {
       portalRT: this.portalRT,
       color: 0x00ffff
     });
+    this.portal.mesh.visible = false;
+    this.portal.ring.visible = false;
 
-    this.portalScene.add(this.portal.mesh);
-    this.portalScene.add(this.portal.ring);
+    /* this.portalScene.add(this.portal.mesh);
+    this.portalScene.add(this.portal.ring); */
 
     this.portalScene.add(new THREE.AmbientLight(0xffffff, 0.4));
     const spotlight = new THREE.SpotLight(0x00ffff, 2);
@@ -388,6 +390,10 @@ class PortalSystem {
       this.renderer.clear(!isAR, true, true);
       this.renderer.render(this.currentScene, this.mainCamera);
 
+      //Animation
+      if (this.vrGroup.userData.mixer) {
+        this.vrGroup.userData.mixer.update(dt);
+    }
     });
   }
 

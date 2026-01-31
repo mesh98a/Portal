@@ -75,30 +75,24 @@ export class StoryManager {
         // 0) ambience sound starten
         { t: 0.0, run: (ctx) => playLoop(ctx, "surroundings", { volume: 0.5 }) },
 
-        // 1) später: surroundings ducking + narrator startet
+        // 1) surroundings ducking + narrator startet
         { t: 4.0, run: (ctx) => {
             // surroundings sanft leiser (aber NICHT stoppen)
             fadeTo(ctx, "surroundings", 0.15, 3.0);
 
-            // narrator1 starten (inline, ohne neue Helper)
-            ctx.sounds ??= {};
-
-            if (!ctx.sounds.narrator1?.isPlaying) {
-            const buffer = ctx.vrGroup?.userData?.audioBuffers?.narrator1;
-            if (!buffer || !ctx.listener) return;
-
-            const narrator = new THREE.Audio(ctx.listener);
-            narrator.setBuffer(buffer);
-            narrator.setLoop(false);
-            narrator.setVolume(1.0);
-            narrator.play();
-
-            ctx.sounds.narrator1 = narrator;
-            }
+            // narrator1 starten
+            playOnce(ctx, "narrator1");
         }},
-        { t: 5.0, run: (ctx) => ctx.vrGroup.userData.fireA.start() },
-        { t: 5.0, run: (ctx) => ctx.vrGroup.userData.fireB.start() },
-        { t: 5.0, run: (ctx) => ctx.vrGroup.userData.fireC.start() },
+        // 2) Mönchsgedanken starten
+        {t: 63.0, run: (ctx) => {
+          playOnce(ctx, "monk");
+        }},
+        {t: 98.0, run: (ctx) => {
+          playOnce(ctx, "narrator2");
+        }},
+        { t: 103.0, run: (ctx) => ctx.vrGroup.userData.fireA.start() },
+        { t: 103.0, run: (ctx) => ctx.vrGroup.userData.fireB.start() },
+        { t: 103.0, run: (ctx) => ctx.vrGroup.userData.fireC.start() },
       ];
     }
     return [];
