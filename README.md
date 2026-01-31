@@ -18,7 +18,8 @@ npm install vite vite-plugin-basic-ssl three three-mesh-ui
 |--------------------------|------------------------------------------------------------------------------|
 | `vite-plugin-basic-ssl`  | Plugin zum Testen über das lokale Netzwerk (mit Vorsicht zu verwenden). |
 | `three-mesh-ui`          | Bibliothek zur Erstellung von Benutzeroberflächen im 3D-Raum mit Three.js. |
-# Startbefehl:
+  
+# Startbefehl
 ```bash
 npm run dev
 ```
