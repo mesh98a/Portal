@@ -1,4 +1,7 @@
 # 🌀Portal in die Geschichte
+**Autoren/Mitwirkende**: Artur Meshalkin, Catharina Hoppensack
+  
+
 **Technologien**: JavaScript,  Three.js, WebXR, Vite
 
 **Beschreibung**:
