@@ -50,7 +50,7 @@ class PortalSystem {
         this.currentScene = this.vrScene;
         this.vrScene.add(this.player);
 
-        //sauberer Startpunkt in VR-Welt
+        // Startpunkt in VR-Welt
         this.player.position.set(0, 0, 0);
       } else {
         // AR-Session: in Portal-Szene starten
@@ -109,6 +109,11 @@ class PortalSystem {
     this._mFlip = new THREE.Matrix4().makeRotationY(Math.PI);
     this._mSrcInv = new THREE.Matrix4();
     this.portalRT.texture.colorSpace = THREE.SRGBColorSpace;
+    this.portalRT.texture.wrapS = THREE.RepeatWrapping;
+
+    // Horizontal spiegeln:
+    this.portalRT.texture.repeat.x = -1;
+    this.portalRT.texture.offset.x = 1;
     this.portalRT2.texture.colorSpace = THREE.SRGBColorSpace;
 
     this.reticle = null;
@@ -145,6 +150,7 @@ class PortalSystem {
       mainCamera: this.mainCamera,
       listener: this.listener,
     });
+    this.player.add(this.ui);
     this.start();
   }
 
@@ -212,8 +218,7 @@ class PortalSystem {
     };
     console.log("✅ Portal 2 in VR-Szene erstellt bei:", this.portal2.mesh.position);
 
-    // Partikelsystem erstellen 
-    // TODO: PARAMETER MÜSSEN NOCH ANGEPASST WERDEN
+    // Partikelsystem erstellen
     const fireA = getParticleSystem({
       camera: this.mainCamera,
       emitter: vrGroup.userData.fireEmitter1,
@@ -221,7 +226,8 @@ class PortalSystem {
       rate: 150.0,
       texture: '/textures/fire.png',
       maxParticles: 2000,
-      radius: 1.0
+      radius: 1.0,
+      baseVelocity: new THREE.Vector3(0, 4.0, 0),
     });
 
     const fireB = getParticleSystem({
@@ -229,10 +235,10 @@ class PortalSystem {
       emitter: vrGroup.userData.fireEmitter2,
       parent: this.vrGroup,
       texture: "/textures/fire.png",
-      rate: 60,
-      radius: 0.25,
-      maxSize: 8,
-      maxLife: 1.4,
+      rate: 150,
+      radius: 0.8,
+      maxSize: 5,
+      maxLife: 2.0,
       baseVelocity: new THREE.Vector3(0, 2.2, 0),
     });
 
@@ -241,21 +247,34 @@ class PortalSystem {
       emitter: vrGroup.userData.fireEmitter3,
       parent: this.vrGroup,
       texture: "/textures/fire.png",
-      rate: 180,
+      rate: 150,
       radius: 1.0,
-      maxSize: 18,
+      maxSize: 6.0,
       maxLife: 2.6,
+      maxParticles: 2000,
       baseVelocity: new THREE.Vector3(0, 4.0, 0),
-      velocityJitter: new THREE.Vector3(0.6, 1.5, 0.6),
-      colorPoints: [[0.0, 0xfff2cc], [0.4, 0xff6600], [1.0, 0xaa0000]],
+      velocityJitter: new THREE.Vector3(0.6, 1.0, 0.6),
+    });
+
+    const fireD = getParticleSystem({
+      camera: this.mainCamera,
+      emitter: vrGroup.userData.fireEmitter4,
+      parent: vrGroup,
+      rate: 100.0,
+      texture: '/textures/fire.png',
+      maxParticles: 2000,
+      radius: 1.0,
+      baseVelocity: new THREE.Vector3(0, 4.0, 0),
     });
 
     fireA.stop({ clear: true }); // nicht sofort laufen lassen
     fireB.stop({ clear: true });
     fireC.stop({ clear: true });
+    fireD.stop({ clear: true });
     vrGroup.userData.fireA = fireA;
     vrGroup.userData.fireB = fireB;
     vrGroup.userData.fireC = fireC;
+    vrGroup.userData.fireD = fireD;
 
   }
 
@@ -342,6 +361,7 @@ class PortalSystem {
         this.vrGroup?.userData?.fireA?.update?.(dt);
         this.vrGroup?.userData?.fireB?.update?.(dt);
         this.vrGroup?.userData?.fireC?.update?.(dt);
+        this.vrGroup?.userData?.fireD?.update?.(dt);
       }
 
       if (!this.isInVRWorld) stopAllFires(this.vrGroup);
@@ -444,7 +464,8 @@ class PortalSystem {
         setCurrentScene: (s) => (this.currentScene = s),
         radius: CONFIG.portal.radius,
         portal1: this.portal,
-        portal2: this.portal2
+        portal2: this.portal2,
+        arController: this.arPortal
     });
 
     this.portal.triggerZ = -0.5; // Relativ zum Portal-Mesh
@@ -497,7 +518,7 @@ app.init();
 function stopAllFires(vrGroup) {
   const ud = vrGroup?.userData;
   if (!ud) return;
-  for (const k of ["fireA", "fireB", "fireC"]) {
+  for (const k of ["fireA", "fireB", "fireC", "fireD"]) {
     ud[k]?.stop?.({ clear: true });
   }
 }

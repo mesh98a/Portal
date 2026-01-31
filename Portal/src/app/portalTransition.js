@@ -10,10 +10,12 @@ export class PortalTransitionManager {
         portal1,
         portal2,
         radius,
+        arController,
         cooldownFrames = 120,
     }) {
         this.player = player;
 
+        this.arController = arController;
         this.getCurrentScene = getCurrentScene;
         this.setCurrentScene = setCurrentScene;
 
@@ -94,6 +96,7 @@ export class PortalTransitionManager {
         this.vrScene.add(this.player);
 
         this.player.position.set(this.player.position.x, this.player.position.y, this.portal1.teleportZ);
+        if (this.arController.ui) this.arController.ui.visible = false;
     }
 
     exitVRWorld() {
@@ -127,6 +130,13 @@ export class PortalTransitionManager {
             
             this.portal1.mesh.updateMatrixWorld(true);
         }
+
+        if (this.arController) {
+            this.arController.resetHitTest();
+            // UI wieder einschalten, damit man weiß, dass man neu platzieren kann
+            if (this.arController.ui) this.arController.ui.visible = true;
+        }
+
     }
 
     async playAudio(key){

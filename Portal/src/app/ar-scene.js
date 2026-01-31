@@ -25,8 +25,10 @@ export class ARPortalController {
 
         this.reticle.matrixAutoUpdate = false;
         this.reticle.visible = false;
+        
+        this.reticle.raycast = () => {};
 
-        if (this.ui) this.reticle.add(this.ui);
+        //if (this.ui) this.reticle.add(this.ui);
         this.portalScene.add(this.reticle);
 
         return this.reticle;
@@ -48,6 +50,11 @@ export class ARPortalController {
             this.isPlaced = true;
         }
         
+        //UI ausschalten, wenn in VR
+        if (this.isPlaced){
+            this.ui.visible = false;
+        }
+
         this.portal.mesh.visible = true;
         this.portal.ring.visible = true;
 
@@ -117,5 +124,15 @@ export class ARPortalController {
                 this.reticle.visible = false;
             }
         }
+    }
+    resetHitTest() {
+        if (this.hitTestSource) {
+            this.hitTestSource.cancel(); // Stoppt den XR Hit-Test Dienst
+            this.hitTestSource = null;
+        }
+        this.hitTestSourceRequested = false;
+        this.reticle.visible = false;
+        this.isPlaced = false; 
+        console.log("🔄 Hit-Test wurde für Neuanfang zurückgesetzt");
     }
 }

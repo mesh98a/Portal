@@ -64,6 +64,18 @@ export class StoryManager {
     }
   }
 
+  /*Animationen--> 
+  0 = idle warrior ?? buggy
+  1 = dismiss handgeste
+  2 = walking
+  3 = handgeste verzweiflung oder so 
+  4 = head shake no
+  5 = normal idle
+  6 = handgesten 
+  7 = head shake
+  8 = 
+  
+  */
   //*  -------------- TIMELINE -------------- *//
   _buildTimeline(name) {
     if (name === "vr_intro") {
@@ -87,12 +99,58 @@ export class StoryManager {
         {t: 63.0, run: (ctx) => {
           playOnce(ctx, "monk");
         }},
+        //Geste 1
+        { t: 63.0, run: (ctx) => {
+            const mixer = ctx.vrGroup.userData.mixer;
+            const clips = ctx.vrGroup.userData.clips;
+            if (mixer && clips) {
+                const action = mixer.clipAction(clips[4]);
+                action.reset().fadeIn(0.5).play();
+            }
+        }},
+        //Geste 2
+        { t: 67.0, run: (ctx) => {
+            const mixer = ctx.vrGroup.userData.mixer;
+            const clips = ctx.vrGroup.userData.clips;
+            if (mixer && clips) {
+                const action = mixer.clipAction(clips[3]);
+                action.reset().fadeIn(0.5).play();
+            }
+        }},
+        //Geste 3
+        { t: 76.0, run: (ctx) => {
+            const mixer = ctx.vrGroup.userData.mixer;
+            const clips = ctx.vrGroup.userData.clips;
+            if (mixer && clips) {
+                const action = mixer.clipAction(clips[1]);
+                action.reset().fadeIn(0.5).play();
+            }
+        }},
+        //Geste 4
+        { t: 80.0, run: (ctx) => {
+            const mixer = ctx.vrGroup.userData.mixer;
+            const clips = ctx.vrGroup.userData.clips;
+            if (mixer && clips) {
+                const action = mixer.clipAction(clips[6]);
+                action.reset().fadeIn(0.5).play();
+            }
+        }},
+        //Geste 5
+        { t: 94.0, run: (ctx) => {
+            const mixer = ctx.vrGroup.userData.mixer;
+            const clips = ctx.vrGroup.userData.clips;
+            if (mixer && clips) {
+                const action = mixer.clipAction(clips[5]);
+                action.reset().fadeIn(0.5).play();
+            }
+        }},
         {t: 98.0, run: (ctx) => {
           playOnce(ctx, "narrator2");
         }},
         { t: 103.0, run: (ctx) => ctx.vrGroup.userData.fireA.start() },
         { t: 103.0, run: (ctx) => ctx.vrGroup.userData.fireB.start() },
         { t: 103.0, run: (ctx) => ctx.vrGroup.userData.fireC.start() },
+        { t: 103.0, run: (ctx) => ctx.vrGroup.userData.fireD.start()},
       ];
     }
     return [];

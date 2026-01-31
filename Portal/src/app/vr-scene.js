@@ -99,6 +99,7 @@ export async function initVRGroup() {
 
             vrGroup.userData.mixer = mixer;
             vrGroup.userData.mockup = mockup;
+            vrGroup.userData.clips = clips;
 
         },
 
@@ -130,25 +131,28 @@ export async function initVRGroup() {
     // Objekt von dem aus Partikelsystem emitten soll
     const fireEmitter1 = new THREE.Object3D();
     fireEmitter1.name = "fireEmitter1";
-    // Beispielposition (MUSS NOCH ANGEPASST WERDEN)
-    fireEmitter1.position.set(0, 1, 10);
+    fireEmitter1.position.set(-5, 1, 10);
     tempel.add(fireEmitter1);
     vrGroup.userData.fireEmitter1 = fireEmitter1;
 
 
     const fireEmitter2 = new THREE.Object3D();
     fireEmitter2.name = "fireEmitter2";
-    // Beispielposition (MUSS NOCH ANGEPASST WERDEN)
     fireEmitter2.position.set(5, 1, 8);
     tempel.add(fireEmitter2);
     vrGroup.userData.fireEmitter2 = fireEmitter2;
 
     const fireEmitter3 = new THREE.Object3D();
     fireEmitter3.name = "fireEmitter3";
-    // Beispielposition (MUSS NOCH ANGEPASST WERDEN)
-    fireEmitter3.position.set(0, 5, 0);
+    fireEmitter3.position.set(-2, 1, 0);
     tempel.add(fireEmitter3);
     vrGroup.userData.fireEmitter3 = fireEmitter3;
+
+    const fireEmitter4 = new THREE.Object3D();
+    fireEmitter4.name = "fireEmitter4";
+    fireEmitter4.position.set(-10, 1, 13);
+    tempel.add(fireEmitter4);
+    vrGroup.userData.fireEmitter4 = fireEmitter4;
 
     return vrGroup;
 }
