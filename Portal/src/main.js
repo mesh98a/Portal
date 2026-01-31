@@ -8,9 +8,9 @@ import getStarfield from "./app/getStarfield.js";
 import { setupWSADControls, setupVRControllers } from './app/controller.js';
 import { createUI } from "./app/text.js";
 import ThreeMeshUI from 'three-mesh-ui'
-import { ARPortalController } from "./app/ar-scene.js";
-import { VRMovementController } from "./app/vr-movement.js";
-import { PortalTransitionManager } from "./app/portalTransition.js";
+import { ARPortalController } from "./app/ARPortalController.js";
+import { VRMovementController } from "./app/VRMovementController.js";
+import { PortalTransitionManager } from "./app/PortalTransitionManager.js";
 import { StoryManager } from "./app/StoryManager.js";
 import { getParticleSystem } from './app/getParticleSystem.js';
 
