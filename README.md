@@ -6,6 +6,8 @@
 
 **Beschreibung**:
 Entwicklung einer interaktiven Portalszene, die den Wechsel zwischen mehreren kurzen Story-Welten ermöglicht.
+Der Benutzer startet in Augmented-Reality (AR) und kann von dort aus ein Portal platzieren, dessen Position anhand von Oberflächenerkennung und Hit-Tests bestimmt wird. Hinter dem Portal befindet sich eine Virtual-Reality (VR) Szene, die eine andere Zeit und einen anderen Ort widerspiegelt. Mit Durchschreiten durch das Portal wechselt der Benutzer in diese Szene und erlebt das historische Geschehen.  
+Es soll exemplarisch die Geschichte des Novizen Yōken Hayashis erzählt werden. Dieser setzte in Japan 1950 aus Minderwertigkeitsgefühlen den Kinkakuji in Brand, dessen Schönheit er nicht ertragen konnte. Als Nutzer beobachtet man den Brand des Tempels aus sicherer Entfernung, während eine Erzählerstimme über die Ereignisse berichtet sowie der Mönch selbst seine Beweggründe erklärt.
 
 **Ziel**:
 Verschiedene kulturelle Erlebnisgeschichten visuell und immersiv erlebbar zu machen.
@@ -49,6 +51,7 @@ npm run dev
 - [Partikelsystem](https://github.com/bobbyroe/Simple-Particle-Effects/blob/main/index.js)
 ### 3D-Objekte
 - [Tempel (Kinkakuji)](https://sketchfab.com/3d-models/dp-2-hw-5-2-kinkaku-ji-a21f0f9e29524e299c49fd666c5112ea)
+- [Mockup Charakter des Mönchs](https://www.mixamo.com/#/?page=3&type=Character)
 ### Audios
 - [Soundeffekt beim Betreten des Portals](https://pixabay.com/sound-effects/film-special-effects-whoosh-flanging-389754/)
 - [Soundeffekt beim Verlassen des Portals](https://pixabay.com/sound-effects/film-special-effects-whoosh-motion-2-390709/)
@@ -59,5 +62,6 @@ npm run dev
 ### Weitere Hilfsmittel
 - [Animationen von Mixamo](https://www.mixamo.com/#/)
 - [Erzähler & Mönch mit ElevenLabs](https://elevenlabs.io/de)
+- [Meshy AI zur Charaktergenerierung des Mönchs (verworfen, da Animationen nicht funktioniert haben)](https://www.meshy.ai/de/discover)
 
 
